@@ -61,6 +61,14 @@ namespace CharHuffman{
         gerarCodHuffman(raiz->esq, codAtual + "0", codigos);
         //Percorre a subárvore direita adicionando '1' ao código
         gerarCodHuffman(raiz->dir, codAtual + "1", codigos);
+
+    }
+
+    void liberarArv(NoHuffman* raiz) {
+        if (raiz == nullptr) return;
+        liberarArv(raiz->esq);
+        liberarArv(raiz->dir);
+        delete raiz;
     }
 
     //Compressão char por char utilizando huffman. Monta tabela de frequência, constrói arv de huffman e escreve bits codificados no arq de saída
@@ -96,10 +104,64 @@ namespace CharHuffman{
 
         Utils::flushBitsArq(output, buffer, bitspreenchidos); //escreve os bits restantes no buffer para o arquivo de saída
 
+        liberarArv(raiz); //libera memória da árvore de Huffman
+
         input.close();
         output.close();
         cout << "Compactacao concluida!" << endl;
 
     }
 
+
+    void decompress(const string& inputFile, const string& outputFile) {
+        ifstream input(inputFile, ios::binary);
+        ofstream output(outputFile, ios::binary);
+
+        int freq[256];
+        input.read(reinterpret_cast<char*>(freq), sizeof(freq)); //lê a tabela de frequência do início do arquivo de entrada
+
+        long long totalCaracteres = 0;
+        for (int i = 0; i < 256; ++i) {
+            totalCaracteres += freq[i];
+        }
+
+        NoHuffman* raiz = montarArvHuffman(freq);
+        if (raiz == nullptr) {
+            cerr << "Erro: O arquivo de entrada esta vazio ou corrompido." << endl;
+            return;
+        }
+
+        string bits;
+        Utils::lerBitsArq(input, bits); //lê os bits codificados do arquivo de entrada
+        long long totalDecodificados = 0; //contador para verificar se todos os caracteres foram decodificados
+
+        NoHuffman* atual = raiz;
+        for (char bit : bits) {
+            if (bit == '0') {
+                atual = atual->esq; //vai para a subárvore esquerda
+            } else {
+                atual = atual->dir; //vai para a subárvore direita
+            }
+
+            //Se chegar em um nó folha, escreve o caractere correspondente no arquivo de saída
+            if (atual->esq == nullptr && atual->dir == nullptr) {
+                output.put(atual->caractere);
+                atual = raiz; //volta para a raiz da árvore
+                totalDecodificados++;
+
+                if (totalDecodificados == totalCaracteres) {
+                    break; //todos os caracteres foram decodificados
+                }
+            }
+        }
+
+
+
+        //liberar mem arvore
+        liberarArv(raiz);
+
+        input.close();
+        output.close();
+        cout << "Descompactacao concluida!" << endl;
+    }
 }

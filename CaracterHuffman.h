@@ -16,6 +16,9 @@ namespace CharHuffman {
     //gera cod huffman a partir da arv
     void gerarCodHuffman(NoHuffman* raiz, string codAtual, string codigos[256]);
 
+    //libera memoria da árvore de huffman
+    void liberarArv(NoHuffman* raiz);
+    
     //Executa a compressão por caractere
     void compress(const string& inputFile, const string& outputFile);
 
