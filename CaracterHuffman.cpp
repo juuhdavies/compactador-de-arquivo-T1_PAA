@@ -6,6 +6,7 @@
 #include <queue>
 #include <string>
 #include <vector>
+#include <chrono>
 
 
 
@@ -73,6 +74,9 @@ namespace CharHuffman{
 
     //Compressão char por char utilizando huffman. Monta tabela de frequência, constrói arv de huffman e escreve bits codificados no arq de saída
     void compress(const string& inputFile, const string& outputFile) {
+        // Contagem de tempo de execução da compressão/descompressão
+        auto start = chrono::high_resolution_clock::now();
+
         int freq[256] = {0};
         montarTabFreq(inputFile, freq);
 
@@ -109,11 +113,19 @@ namespace CharHuffman{
         input.close();
         output.close();
         cout << "Compactacao concluida!" << endl;
+        
+        //Mostra o tempo de execução da compressão/descompressão
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+        cout << "Tempo de execucao: " << duration.count() << " ms" << endl;
 
     }
 
 
     void decompress(const string& inputFile, const string& outputFile) {
+        // Contagem de tempo de execução da compressão/descompressão
+        auto start = chrono::high_resolution_clock::now();
+
         ifstream input(inputFile, ios::binary);
         ofstream output(outputFile, ios::binary);
 
@@ -163,5 +175,10 @@ namespace CharHuffman{
         input.close();
         output.close();
         cout << "Descompactacao concluida!" << endl;
+
+        //Mostra o tempo de execução da compressão/descompressão
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+        cout << "Tempo de execucao: " << duration.count() << " ms" << endl;
     }
 }

@@ -4,6 +4,7 @@
 #include <queue>
 #include <iostream>
 #include <fstream>
+#include <chrono>
 
 using namespace std;
 
@@ -55,6 +56,8 @@ namespace WordHuffman {
     }
 
     void compress(const string& inputFile, const string& outputFile) {
+        // Contagem de tempo de execução da compressão/descompressão
+        auto start = chrono::high_resolution_clock::now();
         unordered_map<string, int> freq;
         montarTabFreq(inputFile, freq);
 
@@ -92,9 +95,17 @@ namespace WordHuffman {
         input.close();
         output.close();
         cout << "Compactacao concluida!" << endl;
+
+        //Mostra o tempo de execução da compressão/descompressão
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+        cout << "Tempo de execucao: " << duration.count() << " ms" << endl;
     }
 
     void decompress(const string& inputFile, const string& outputFile) {
+        // Contagem de tempo de execução da compressão/descompressão
+        auto start = chrono::high_resolution_clock::now();
+        
         ifstream input(inputFile, ios::binary);
         ofstream output(outputFile, ios::binary);
 
@@ -155,5 +166,10 @@ namespace WordHuffman {
         input.close();
         output.close();
         cout << "Descompactacao concluida!" << endl;
+
+        //Mostra o tempo de execução da compressão/descompressão
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+        cout << "Tempo de execucao: " << duration.count() << " ms" << endl;
     }
 }

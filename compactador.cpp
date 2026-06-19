@@ -23,12 +23,6 @@ int main(){
     do{
         mostrarMenu();
         cin >> opcao;
-
-        
-
-        // Contagem de tempo de execução da compressão/descompressão
-        auto start = chrono::high_resolution_clock::now();
-
         switch(opcao){
             case 0:
                 cout << "Saindo..." << endl;
@@ -38,6 +32,7 @@ int main(){
                 cin >> inputFile;
                 cout << "Digite nome do arq de saida(de preferencia .bin): ";
                 cin >> outputFile;
+
                 CharHuffman::compress(inputFile, outputFile);
                 break;
             case 2:
@@ -66,10 +61,7 @@ int main(){
                 break;
         }
 
-        //Mostra o tempo de execução da compressão/descompressão
-        auto end = chrono::high_resolution_clock::now();
-        auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
-        cout << "Tempo de execucao: " << duration.count() << " ms" << endl;
+        
 
     }while (opcao != 0);
 
