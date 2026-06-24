@@ -14,16 +14,28 @@ using namespace std;
 
 namespace CharHuffman{
     //implementação das funções de caracterHuffman.h
-
+    /**
+     * @brief Constrói a tabela de frequências lendo o arquivo byte a byte.
+     * Mapeia cada caractere (0-255) da tabela ASCII estendida ao seu número de ocorrências.
+     * @param inputFile Caminho do arquivo original de entrada.
+     * @param freq Vetor estático de 256 posições que armazenará as frequências.
+     */
     void montarTabFreq(const string& inputFile, int freq[256]) {
         ifstream file(inputFile, ios::binary);
         char byte;
 
+        //O uso de file.get(byte) garante a leitura binária pura de cada byte isolado
         while (file.get(byte)) {
+            //Conversão para unsigned char previne que índices fiquem negativos (ex: caracteres acentuados)
             freq[static_cast<unsigned char>(byte)]++;
         }
     }
 
+    /**
+     * @brief Monta a Árvore Binária de Huffman Clássica a partir do vetor de frequências.
+     * @param freq Vetor estático com as frequências mapeadas.
+     * @return NoHuffman* Retorna o ponteiro para o nó raiz da árvore consolidada.
+     */
     NoHuffman* montarArvHuffman(const int freq[256]) {
 
         //Criar uma fila de prioridade para construir a árvore de Huffman
@@ -50,6 +62,12 @@ namespace CharHuffman{
 
     }
 
+    /**
+     * @brief Percorre a árvore recursivamente (Pré-ordem) para codificar os caminhos binários.
+     * @param raiz Ponteiro para o nó atual da árvore.
+     * @param codAtual String temporária contendo a sequência de bits calculada até o momento.
+     * @param codigos Vetor de strings indexado que armazenará o código de bits final de cada caractere.
+     */
     void gerarCodHuffman(NoHuffman* raiz, string codAtual, string codigos[256]) {
         if (raiz == nullptr) return;
 
@@ -65,6 +83,9 @@ namespace CharHuffman{
 
     }
 
+    /**
+     * @brief Desaloca a árvore de Huffman recursivamente.
+     */
     void liberarArv(NoHuffman* raiz) {
         if (raiz == nullptr) return;
         liberarArv(raiz->esq);
@@ -73,6 +94,10 @@ namespace CharHuffman{
     }
 
     //Compressão char por char utilizando huffman. Monta tabela de frequência, constrói arv de huffman e escreve bits codificados no arq de saída
+    /**
+     * @brief compressão baseada em caracteres.
+     * Grava o cabeçalho estruturado e empacota os dados em nível de bits.
+     */
     void compress(const string& inputFile, const string& outputFile) {
         // Contagem de tempo de execução da compressão/descompressão
         auto start = chrono::high_resolution_clock::now();
@@ -92,6 +117,7 @@ namespace CharHuffman{
         ifstream input(inputFile, ios::binary); //abre o arquivo de entrada em modo binário
         ofstream output(outputFile, ios::binary); //abre o arquivo de saída em modo binário
 
+        //GRAVAÇÃO DO CABEÇALHO
         output.write(reinterpret_cast<char*>(freq), sizeof(freq)); //escreve a tabela de frequência no início do arquivo de saída
 
         char byte; //armazenar byte lido no arq de entrada
@@ -100,6 +126,8 @@ namespace CharHuffman{
         unsigned char buffer = 0;
         int bitspreenchidos = 0;
         
+        //GRAVAÇÃO DOS DADOS COMPACTADOS
+        //Lê o arquivo de entrada byte a byte, obtém o código correspondente e escreve os bits no arquivo de saída
         while(input.get(byte)) {
             byteIndex = static_cast<unsigned char>(byte);
             string cod = codigos[byteIndex];
@@ -121,7 +149,10 @@ namespace CharHuffman{
 
     }
 
-
+    /**
+     * @brief descompressão por palavras.
+     * Reconstrói a árvore de Huffman usando o cabeçalho e regenera o texto original.
+     */
     void decompress(const string& inputFile, const string& outputFile) {
         // Contagem de tempo de execução da compressão/descompressão
         auto start = chrono::high_resolution_clock::now();
@@ -129,6 +160,7 @@ namespace CharHuffman{
         ifstream input(inputFile, ios::binary);
         ofstream output(outputFile, ios::binary);
 
+        //LEITURA DO CABEÇALHO
         int freq[256];
         input.read(reinterpret_cast<char*>(freq), sizeof(freq)); //lê a tabela de frequência do início do arquivo de entrada
 
@@ -137,6 +169,7 @@ namespace CharHuffman{
             totalCaracteres += freq[i];
         }
 
+        //DECODIFICAÇÃO DOS BITS
         NoHuffman* raiz = montarArvHuffman(freq);
         if (raiz == nullptr) {
             cerr << "Erro: O arquivo de entrada esta vazio ou corrompido." << endl;

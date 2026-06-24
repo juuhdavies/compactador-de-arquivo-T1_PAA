@@ -9,13 +9,25 @@
 using namespace std;
 
 namespace WordHuffman {
+
+    /**
+     * @brief Constrói a tabela de frequências das palavras a partir do arquivo de texto.
+     * @param inputFile Caminho do arquivo de entrada.
+     * @param freq Mapa de dispersão onde será armazenada a contagem (Palavra -> Frequência).
+     */
     void montarTabFreq(const string& inputFile, unordered_map<string, int>& freq) {
+        // Divide o arquivo de texto em tokens
         vector<string> tokens = Utils::tokenizar(inputFile);
+
+        // Contabiliza a ocorrência de cada token individualmente no mapa
         for (const string& token : tokens) {
             freq[token]++;
         }
     }
 
+    /**
+     * @brief Desaloca a árvore de Huffman recursivamente.
+     */
     void liberarArv(NoHuffmanPalavra* raiz) {
         if (raiz) {
             liberarArv(raiz->esq);
@@ -24,6 +36,12 @@ namespace WordHuffman {
         }
     }
 
+    /**
+     * @brief Percorre a árvore binária recursivamente para mapear os caminhos de bits.
+     * @param raiz Ponteiro para o nó atual.
+     * @param codAtual String binária acumulada no caminho até o nó atual.
+     * @param codigos Mapa de saída que associará cada palavra ao seu código binário final.
+     */
     void gerarCodHuffman(NoHuffmanPalavra* raiz, string codAtual, unordered_map<string, string>& codigos) {
         if (!raiz) return;
 
@@ -32,10 +50,16 @@ namespace WordHuffman {
             codigos[raiz->palavra] = codAtual;
         }
 
+        // Caminho para a esquerda recebe bit '0', caminho para a direita recebe bit '1'
         gerarCodHuffman(raiz->esq, codAtual + "0", codigos);
         gerarCodHuffman(raiz->dir, codAtual + "1", codigos);
     }
 
+    /**
+     * @brief Monta a Árvore Binária de Huffman baseando-se no algoritmo guloso clássico.
+     * @param freq Tabela hash contendo a distribuição de frequências das palavras.
+     * @return NoHuffmanPalavra* Retorna o ponteiro para o nó raiz da árvore gerada.
+     */
     NoHuffmanPalavra* montarArvHuffman(const unordered_map<string, int>& freq) {
         priority_queue<NoHuffmanPalavra*, vector<NoHuffmanPalavra*>, compararNosPalavra> fila;
         for (const auto& par : freq) { // Para cada palavra e sua frequência na tabela de frequência, cria um nó folha e o adiciona à fila de prioridade
@@ -55,6 +79,10 @@ namespace WordHuffman {
         return fila.top(); // O nó restante na fila é a raiz da árvore de Huffman
     }
 
+    /**
+     * @brief compressão baseada em palavras.
+     * Grava o cabeçalho estruturado e empacota os dados em nível de bits.
+     */
     void compress(const string& inputFile, const string& outputFile) {
         // Contagem de tempo de execução da compressão/descompressão
         auto start = chrono::high_resolution_clock::now();
@@ -72,6 +100,7 @@ namespace WordHuffman {
 
         ofstream output(outputFile, ios::binary);
 
+        //GRAVAÇÃO DO CABEÇALHO
         size_t qtdPalavras = freq.size();
         output.write(reinterpret_cast<const char*>(&qtdPalavras), sizeof(size_t));
 
@@ -80,7 +109,7 @@ namespace WordHuffman {
             output.write(reinterpret_cast<const char*>(&par.second), sizeof(int)); // Escreve a frequência
         }
 
-
+        //GRAVAÇÃO DOS DADOS CODIFICADOS
         ifstream input(inputFile);
         string word;
         unsigned char buffer = 0;
@@ -102,6 +131,10 @@ namespace WordHuffman {
         cout << "Tempo de execucao: " << duration.count() << " ms" << endl;
     }
 
+    /**
+     * @brief descompressão por palavras.
+     * Reconstrói a árvore de Huffman usando o cabeçalho e regenera o texto original.
+     */
     void decompress(const string& inputFile, const string& outputFile) {
         // Contagem de tempo de execução da compressão/descompressão
         auto start = chrono::high_resolution_clock::now();
